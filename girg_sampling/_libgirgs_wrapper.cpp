@@ -15,7 +15,13 @@ PYBIND11_MODULE(_libgirgs_wrapper, m)
           "PyBind11-wrapped libgirgs function");
     m.def("scaleWeights", &girgs::scaleWeights,
           "PyBind11-wrapped libgirgs function");
+    m.def("scaleWeightPolynomial", &girgs::scaleWeightPolynomial,
+      "PyBind11-wrapped libgirgs function");      
     m.def("generateEdges", &girgs::generateEdges,
+          "PyBind11-wrapped libgirgs function");
+    m.def("generateBDFEdges", &girgs::generateBDFEdges,
+          "PyBind11-wrapped libgirgs function");
+    m.def("generateBDFEdgesTrivial", &girgs::generateBDFEdgesTrivial,
           "PyBind11-wrapped libgirgs function");
     m.def("saveDot", &girgs::saveDot,
           "PyBind11-wrapped libgirgs function");

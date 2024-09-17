@@ -1,16 +1,6 @@
-import os
 import random
 from typing import List, Tuple
-
-_prev_cwd = os.getcwd()
-try:
-    os.chdir(os.path.dirname(__file__))
-    from . import _libgirgs_wrapper
-except ImportError as e:
-    raise ImportError("Error importing girgs CPP library wrapper.") from e
-finally:
-    os.chdir(_prev_cwd)
-
+import _libgirgs_wrapper
 
 def generateWeights(
     n: int, ple: float, *, seed: int = None, parallel: bool = True
@@ -44,6 +34,18 @@ def generateEdges(
     if seed is None:
         seed = random.randint(0, (1 << 31) - 1)
     return _libgirgs_wrapper.generateEdges(weights, positions, alpha, seed)
+
+def generateBDFEdges(
+    weights: List[float],
+    positions: List[List[float]],
+    minMaxSet: List[List[int]],
+    reducedMinMaxSet: List[List[int]],
+    depthVol: int,
+    thr_con: float,
+    *,
+    seed: int = None,
+) -> List[Tuple[int, int]]:
+    return _libgirgs_wrapper.generateBDFEdges(weights, positions, minMaxSet, reducedMinMaxSet, depthVol, thr_con)
 
 
 def generate_networkx_girg(
@@ -88,4 +90,4 @@ def generate_networkx_girg(
     return g
 
 
-del _prev_cwd, os, List, Tuple
+del List, Tuple

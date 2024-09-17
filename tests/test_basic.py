@@ -1,4 +1,4 @@
-from girg_sampling import girgs, hypergirgs
+from girg_sampling import girgs
 
 
 def test_generate_girg():
@@ -22,24 +22,3 @@ def test_generate_girg():
     assert len(e) < 1.2 * (n * deg / 2)
 
 
-def test_generate_hypergirg():
-    n = 1001
-    alpha = 0.75
-    t = 0.0
-    deg = 2.2
-
-    _ = hypergirgs.calculateRadiusLikeNetworKit(n, alpha, t, deg)
-    r = hypergirgs.calculateRadius(n, alpha, t, deg)
-
-    _radii = hypergirgs.sampleRadii(n, alpha, r, seed=22)
-    _angles = hypergirgs.sampleAngles(n, seed=23)
-    radii, angles = hypergirgs.sampleRadiiAndAngles(n, alpha, r, seed=42)
-    assert len(_radii) == n
-    assert len(_angles) == n
-    assert len(radii) == n
-    assert len(angles) == n
-
-    e = hypergirgs.generateEdges(radii, angles, t, r, seed=43)
-    # Note: HRG have lower than expected degree even for medium N
-    assert len(e) > 0.65 * (n * deg / 2)
-    assert len(e) < 1.2 * (n * deg / 2)

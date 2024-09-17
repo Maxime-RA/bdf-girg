@@ -5,6 +5,12 @@ from bdfs.OuterMaxBDF import OuterMax
 
 
 def parse_args():
+    '''
+    Parses command line argument for the cli
+
+    Returns: a dictionary with argument-value pairs. If an argument has no value it is set to true.
+
+    '''
     args = sys.argv[1:]
     args_dict = {}
 
@@ -24,6 +30,15 @@ def parse_args():
 
 
 def parse_bdf(bdf):
+    '''
+    Parses a bdf in string representation
+
+    Args:
+        bdf: representation as min, max terms. If a bdf is not given as binary, it is converted to one.
+
+    Returns: A BDF
+
+    '''
     bdf = bdf.strip()
     if bdf.isdigit():
         return D(int(bdf))
@@ -58,6 +73,7 @@ def split_top_level(expression):
 
 
 def create_bdf_tree(sub_bdf, outer_type):
+    """ Creates a binary tree bdf representation"""
     if len(sub_bdf) == 1:
         return sub_bdf[0]
     else:

@@ -32,16 +32,27 @@ def gen_bdf_edges_trivial(positions, weights, bdf, thr_constant):
 
 
 def gen_bdf_girg(positions, weights, bdf, thr_constant, thr_const_gen=None):
-    """ Generates the edges of bdf-girg. Basically just makes pre-post- and graph- computation in one step."""
+    """ Generates the edges of bdf-girg"""
     if thr_const_gen is None:
         thr_const_gen = thr_constant
-
     MMS = [list(tuple) for tuple in bdf.get_min_max_form()]
     MMS_reduced = [list(tuple) for tuple in optimal_min_max_shortening(bdf)]
     return girgs.generateBDFEdges(weights, positions, MMS, MMS_reduced, bdf.get_depth_vol(), thr_constant, thr_const_gen)
 
 
 def estimate_threshold_constant(bdf, weights, desired_degree, ignore_intersections=True):
+    '''
+    Estimates the threshold to achieve a certain average degree.
+
+    Args:
+        bdf: The boolean distance function
+        weights: the weight the graph is going to be sampled with
+        desired_degree: The average degree that the graph should have
+        ignore_intersections: should intersection between max-terms be considered (recommended)
+
+    Returns:
+
+    '''
     # Use either simplified volume of all max-girgs or real volume
     if ignore_intersections:
         volume_poly = [0] * (bdf.get_depth_com() + 1)
@@ -56,6 +67,17 @@ def estimate_threshold_constant(bdf, weights, desired_degree, ignore_intersectio
 
 
 def optimal_min_max_shortening(bdf):
+    '''
+    Return the min-max set of a BDF that is shortened to reduce the length as much as possible.
+    If less than 2^17 combination exist, the optimal solution is returned.
+    Otherwise the described approximation algorithm is use
+
+    Args:
+        bdf: The boolean distance function
+
+    Returns: shortened min-max set of the bdf
+
+    '''
     # For every max set, create all possible way of it having size equal to volumetric length
     all_max_set_combi = [set(combinations(t, bdf.get_depth_vol())) for t in list(bdf.get_min_max_form())]
 
