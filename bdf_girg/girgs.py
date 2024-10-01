@@ -47,9 +47,7 @@ def generateBDFEdges(
     reducedMinMaxSet: List[List[int]],
     depthVol: int,
     thr_con: float,
-    thr_con_generation: float,
-    *,
-    seed: int = None,
+    thr_con_generation: float
 ) -> List[Tuple[int, int]]:
     return _libgirgs_wrapper.generateBDFEdges(weights, positions, minMaxSet, reducedMinMaxSet, depthVol, thr_con, thr_con_generation)
 
@@ -59,11 +57,20 @@ def generateBDFEdgesTrivial(
     positions: List[List[float]],
     minMaxSet: List[List[int]],
     depthVol: int,
-    thr_con: float,
-    *,
-    seed: int = None,
+    thr_con: float
 ) -> List[Tuple[int, int]]:
     return _libgirgs_wrapper.generateBDFEdgesTrivial(weights, positions, minMaxSet, depthVol, thr_con)
+
+def checkBDFEdges(
+    weights: List[float],
+    positions: List[List[float]],
+    edges: List[Tuple[int, int]],
+    minMaxSet: List[List[int]],
+    depthVol: int,
+    thr_con: float
+) -> List[Tuple[int, int]]:
+    return _libgirgs_wrapper.checkBDFEdges(weights, positions, edges, minMaxSet, depthVol, thr_con)
+
 
 
 def generate_networkx_girg(

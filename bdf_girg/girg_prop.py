@@ -1,3 +1,4 @@
+# Used for the benchmarks
 import argparse
 from time import time
 import bdf_girg

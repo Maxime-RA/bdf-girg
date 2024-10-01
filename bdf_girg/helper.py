@@ -4,6 +4,27 @@ from bdfs.OuterMinBDF import OuterMin
 from bdfs.OuterMaxBDF import OuterMax
 
 
+def weighted_sum(weights, power):
+    """
+    Returns the of all weights^exponent.
+    Useful to get just get the sum W, using exp = 1.
+    Or with exponent |s_i| / D_v(k) to estimate the threshold
+    """
+    result = 0
+    for i in weights:
+        result += (i ** power)
+    return result
+
+
+def weight_scaling(weights, thr_con, depth_vol):
+    weight_adjust = (thr_con ** depth_vol) * sum(weights)
+    return [weight * weight_adjust for weight in weights]
+
+
+def filter_by_index(positions, max_set):
+    return [[row[i] for i in max_set] for row in positions]
+
+
 def parse_args():
     '''
     Parses command line argument for the cli

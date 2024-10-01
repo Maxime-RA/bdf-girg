@@ -1,5 +1,6 @@
 from itertools import combinations, product
-import os, sys, girgs
+import os, sys, girgs, helper
+from time import time
 
 
 def generate_weights(n, ple, seed=None):
@@ -98,3 +99,74 @@ def optimal_min_max_shortening(bdf):
             min_length = len(s)
             min_set = s
     return min_set
+
+
+def step_weight_adjust(positions, weights, min_max_set, thr_con, depth_vol):
+    """
+    Given positions, weights and a min-max set of the dimensions 
+    the positions for the seperated max-girgs are generated and the weight adjusted to have the
+    form used by the girg-generator. 
+    
+    Args:
+        positions: The positions the bdf-girg is generated on
+        weights: The original weights
+        min_max_set: The min-max set of the simplified bdf. All max-sets must have the same length!
+        thr_constant: The threshold constant
+        thr_exp: The threshold exponent
+
+    Returns: An array of 3-tuples for each max-set. Each tuple contains the adapted positions (1) 
+    the scaled weights (2) and the time that was needed for the computation (3).
+
+    """""
+    sub_graphs = []
+    scaled_weights = helper.weight_scaling(weights, thr_con, depth_vol)
+    for i in min_max_set:
+        t = time()
+        r_positions = helper.filter_by_index(positions, i)
+        sub_graphs.append((r_positions, scaled_weights, time() - t))
+    return sub_graphs
+    
+    
+def step_girg_gen(gen_list):
+    """
+        Generates max-girgs from a list of positions and weights
+
+    Args:
+        gen_list: Takes a list of tuples, using just the first two entries. The first has to be the positions,
+        the second the weights. 
+
+    Returns: A list of tuples containing the generated edges and the time needed for generation.
+
+    """
+    result = []
+    for i in gen_list:
+        t = time()
+        edges = girgs.generateEdges(i[1], i[0], float('inf'))
+        result.append((edges, time() - t))
+    return result
+    
+    
+def step_girg_assemble(gen_list, position, weights, min_max_set, thr_con, depth_vol):
+    """
+        Assembles a bdf-girg from the generated edges.
+
+    Args:
+        gen_list: A list of tuples with the edges in te first entry. Format (edges, -)
+        position: positions the graph has been generated with
+        weights: weights the graph has been generated with
+        min_max_set: min-max-set of the original bdf
+        thr_con: the threshold constant
+        thr_exp: the threshold exponent
+
+    Returns: The edges of the bdf-girg, and a list of stats for each max-set [number of edges, number of added edges, time for pros]
+
+    """
+    edges = set()
+    stats = []
+    for i in gen_list:
+        t = time()
+        before_length = len(edges)
+        filtered_edges = set(girgs.checkBDFEdges(weights, position, i[0], min_max_set, depth_vol, thr_con));
+        edges |= filtered_edges
+        stats.append((len(filtered_edges), len(edges) - before_length, time() - t))
+    return edges, stats

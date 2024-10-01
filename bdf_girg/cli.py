@@ -6,14 +6,15 @@ from bdfs.OuterMaxBDF import OuterMax
 from bdfs.OuterMinBDF import OuterMin
 
 help_string = 'Generate BDF-GIRG in expected linear time:\n' \
-              '\t[-n anInt]    \t\t number of node                        \t default 1000\n' \
+              '\t[-n anInt]    \t\t number of vertice                     \t default 1000\n' \
               '\t[-deg aFloat] \t\t average degree                        \t default 10\n' \
-              '\t[-bdf aBDF]   \t\t bdf - binary format                   \t default min(0,max(1,2))\n' \
+              '\t[-bdf aBDF]   \t\t boolean distance function             \t default min(0,max(1,2))\n' \
               '\t[-ple aFloat] \t\t power-law exponent                    \t default 2.5\n' \
-              '\t[-comp]       \t\t consider intersection for threshold   \t default False\n' \
-              '\t[-triv]       \t\t use trivial algo                      \t default False\n' \
-              '\t[-simp]       \t\t use simplification algo               \t default False\n' \
+              '\t[-comp]       \t\t ignore intersections                  \t default False\n' \
+              '\t[-triv]       \t\t use trivial algorithm                 \t default False\n' \
+              '\t[-simp]       \t\t use simplification algorithm          \t default False\n' \
               '\t[-pbdf]       \t\t stats about bdf                       \t default False\n' \
+              '\t[-pmax]       \t\t stats about max-sets                  \t default False\n' \
               '\t[-wseed anInt]\t\t seed for weights                      \t default random\n' \
               '\t[-pseed anInt]\t\t seed for positions                    \t default random\n'\
 
@@ -46,27 +47,21 @@ def print_girg_stats(edges, t):
     print("Avg degree: {:.2f}  err:{:.2f}%\n".format(av, abs(((av / deg) - 1) * 100)))
 
 
-def print_max_set_stats(min_max_set, adapted_form, edge_list, num_edges, post_stats, t_ada, t_gen, t_con, t_fin):
+def print_max_set_stats(pre_form, gen_form, post_form, t_pre, t_gen, t_pos, min_max_set):
     print(">>>> stats about bdf-girg generation -----")
-    print("Total time for preprocessing:  {:.3f}s".format(t_gen - t_ada))
-    print("Total time for computation:    {:.3f}s".format(t_con - t_gen))
-    print("Total time for postprocessing: {:.3f}s".format(t_fin - t_con))
+    print("Total time for preprocessing:  {:.3f}s".format(t_gen - t_pre))
+    print("Total time for computation:    {:.3f}s".format(t_pos - t_gen))
+    print("Total time for postprocessing: {:.3f}s".format(time() - t_pos))
     print(">>>> stats about simplified max-set generation -----")
-    for i in range(len(adapted_form)):
-        print("For set: {:<8} pre. {:.3f}s  gen. {:.3f}s got {} edges".format(
-            str(adapted_form[i][2]),
-            adapted_form[i][3],
-            edge_list[i][2],
-            len(edge_list[i][0]),
-        ))
-    print(">>>> stats about each max-set  -----")
-    for i in range(len(post_stats)):
-        print("For set: {:<8} post. {:.3f}s got {} edges, added {} edges {}% of total".format(
+    for i in range(len(pre_form)):
+        print("For set: {:<8}\n Time: pre. {:.3f}s  gen. {:.3f}s  post {:.3f}s \n Edges:  sampled {}. after check {}. added {}".format(
             str(min_max_set[i]),
-            post_stats[i][2],
-            post_stats[i][0],
-            post_stats[i][1],
-            (post_stats[i][1] / num_edges) * 100
+            pre_form[i][2],
+            gen_form[i][1],
+            post_form[i][2],
+            len(gen_form[i][0]),
+            post_form[i][0],
+            post_form[i][1]
         ))
     print("")
 
@@ -91,13 +86,13 @@ def estimate_threshold():
 
     print('Estimate threshold constant...', end='', flush=True)
     t = time()
-    constant = bdf_girg.estimate_threshold_constant(bdf, weights, deg, not comp)
+    constant = bdf_girg.estimate_threshold_constant(bdf, weights, deg, comp)
     print('\t done in {:.3f}s'.format(time() - t))
 
     if deg < bdf.get_depth_vol() * 4 * bdf.get_length_vol():
         t = time()
         print('Degree low, higher estimate...', end='', flush=True)
-        const_high = bdf_girg.estimate_threshold_constant(bdf, weights, bdf.get_depth_vol() * 5 * bdf.get_length_vol(), not comp)
+        const_high = bdf_girg.estimate_threshold_constant(bdf, weights, bdf.get_depth_vol() * 5 * bdf.get_length_vol(), comp)
         print('\t done in {:.3f}s'.format(time() - t))
     else:
         const_high = constant
@@ -115,12 +110,29 @@ def gen_trivial():
 
 
 def gen_simpl():
-    print("----- generation using simple algo -----------")
+    print("-- generation using linear time algo ----------")
     print('Generating graph...', end='', flush=True)
     t_start = time()
-    edges = bdf_girg.gen_bdf_girg(positions, weights, bdf, thr_con, thr_con_gen)
-    print_girg_stats(set(edges), t_start)
-
+    if not pmax:
+        edges = bdf_girg.gen_bdf_girg(positions, weights, bdf, thr_con, thr_con_gen)
+        print_girg_stats(set(edges), t_start)
+        return
+        
+    MMS = list(bdf.get_min_max_form())
+    t_pre = time()
+    pre_form = bdf_girg.step_weight_adjust(positions, weights, bdf_girg.optimal_min_max_shortening(bdf), thr_con, bdf.get_depth_vol())
+    
+    t_gen = time()
+    gen_form = bdf_girg.step_girg_gen(pre_form)
+    
+    t_pos = time()
+    edges, pos_form = bdf_girg.step_girg_assemble(gen_form, positions, weights, MMS, thr_con, bdf.get_depth_vol())
+    
+    print_girg_stats(edges, t_start)
+    print_max_set_stats(pre_form, gen_form, pos_form, t_pre, t_gen, t_pos, MMS)
+    
+    
+   
 
 if __name__ == '__main__':
     args = helper.parse_args()
@@ -137,6 +149,7 @@ if __name__ == '__main__':
     triv = True if 'triv' in args else False
     simp = True if 'simp' in args else False
     pbdf = True if 'pbdf' in args else False
+    pmax = True if 'pmax' in args else False
     wseed = int(args['wseed']) if 'wseed' in args else None
     pseed = int(args['pseed']) if 'pseed' in args else None
 
@@ -151,6 +164,5 @@ if __name__ == '__main__':
     thr_con, thr_con_gen = estimate_threshold()
     if triv:
         gen_trivial()
-
     if simp:
         gen_simpl()
